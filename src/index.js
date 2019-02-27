@@ -3,6 +3,8 @@ const Socket = require('net').Socket
     , util = require('util')
     , defaults = require('./default')
     , isEmptyObj = require('./is-empty-object')
+    , NEW_LINE = '\r\n'
+    , END_LINE = '\r\n\r\n'
 
 function AMI(opt) {
   opt = opt || {}
@@ -60,9 +62,9 @@ AMI.prototype._createMessage = function(obj) {
     msg.push([k, ': ', obj[k]].join(''))
   }
 
-  msg.push('\r\n')
+  msg.push(NEW_LINE)
 
-  return msg.join('\r\n')
+  return msg.join(NEW_LINE)
 }
 
 AMI.prototype._parseMessage = function(message) {
@@ -71,8 +73,8 @@ AMI.prototype._parseMessage = function(message) {
 
   this._msgBuffer += message
 
-  while ((endLineIndex = this._msgBuffer.indexOf('\r\n\r\n')) != -1) {
-    msgLines = this._msgBuffer.substr(0, endLineIndex+2).split('\r\n')
+  while ((endLineIndex = this._msgBuffer.indexOf(END_LINE)) != -1) {
+    msgLines = this._msgBuffer.substr(0, endLineIndex+2).split(NEW_LINE)
     this._msgBuffer = this._msgBuffer.substr(endLineIndex+4)
 
     for (let i=0;i<msgLines.length;i++) {
