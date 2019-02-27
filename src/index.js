@@ -142,7 +142,7 @@ AMI.prototype._onData = function(buffer) {
       if (this._requestMap[message.ActionID]) {
         this._requestMap[message.ActionID].events.push(message)
 
-        if (message.EventList && message.EventList == 'Complete') {
+        if (message.EventList && (message.EventList == 'Complete' || message.EventList == 'Cancelled')) {
           let responseMsg = this._requestMap[message.ActionID].message
           responseMsg.Events = this._requestMap[message.ActionID].events
 
