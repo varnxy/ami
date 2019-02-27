@@ -114,7 +114,7 @@ AMI.prototype._onData = function(buffer) {
       Username: this._config.username,
       Secret: this._config.password,
       Events: this._config.events ? 'on' : 'off'
-    }).then(msg => {
+    }).then(() => {
       this.emit('authenticated')
     }).catch((err) => {
       this.emit('error', new Error(err.toString()))
