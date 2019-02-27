@@ -40,7 +40,7 @@ AMI.prototype.action = function(name, params) {
   params.ActionID = params.ActionID || +new Date()
 
   message = this._createMessage(params)
-  // console.log(message)
+
   let promise = new Promise((resolve, reject) => {
     this._requestMap[params.ActionID] = {
       resolve: resolve,
@@ -88,7 +88,7 @@ AMI.prototype._parseMessage = function(message) {
 }
 
 AMI.prototype._onConnect = function() {
-  ami.emit('connected')
+  this.emit('connected')
 }
 
 AMI.prototype._onClose = function() {
