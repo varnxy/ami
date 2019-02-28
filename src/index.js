@@ -2,9 +2,9 @@ const Socket = require('net').Socket
     , EventEmitter = require('events').EventEmitter
     , util = require('util')
     , defaults = require('./default')
-    , isEmptyObj = require('./is-empty-object')
     , NEW_LINE = '\r\n'
     , END_LINE = '\r\n\r\n'
+    , COLON_SEP = ': '
 
 function AMI(opt) {
   opt = opt || {}
@@ -14,8 +14,11 @@ function AMI(opt) {
   this._connection = null
   this._requestMap = {}
   this._connected = false
-  this._loggedIn = false
   this._msgBuffer = ''
+  this._requestQueues = []
+  this._requestOnWork = false
+  // This just for unique ActionID
+  this._requestId = +new Date()
 }
 
 AMI.prototype.start = function() {
@@ -27,39 +30,53 @@ AMI.prototype.start = function() {
     'error': this._onError.bind(this)
   }
   this._connection = new Socket()
+
   this._connection.connect(this._config.port, this._config.host)
+  this._connection.setKeepAlive(true)
+  this._connection.setNoDelay(true)
+  this._connection.setEncoding('utf-8')
+  this._connection.once('connect', this._authenticate.bind(this))
 
   for (let evt in eventMap) {
-    this._connection.addListener(evt, eventMap[evt])
+    this._connection.on(evt, eventMap[evt])
   }
 }
 
 AMI.prototype.action = function(name, params) {
-  let message = ''
-
   params = params || {}
   params.Action = name
-  params.ActionID = params.ActionID || +new Date()
+  params.ActionID = this._requestId++
 
-  message = this._createMessage(params)
-
-  let promise = new Promise((resolve, reject) => {
+  let message = this._createMessage(params)
+    , promise = new Promise((resolve, reject) => {
     this._requestMap[params.ActionID] = {
       resolve: resolve,
-      reject: reject,
-      eventList: false
+      reject: reject
     }
   })
 
-  this._connection.write(message)
+  this._requestQueues.push(message)
+
+  if (!this._requestOnWork) {
+    this._requestWorker()
+  }
 
   return promise
+}
+
+AMI.prototype._requestWorker = function() {
+  let message = this._requestQueues.shift()
+  this._requestOnWork = this._requestQueues.length > 0
+
+  if (message) {
+    this._connection.write(message)
+  }
 }
 
 AMI.prototype._createMessage = function(obj) {
   let msg = []
   for (let k in obj) {
-    msg.push([k, ': ', obj[k]].join(''))
+    msg.push([k, COLON_SEP, obj[k]].join(''))
   }
 
   msg.push(NEW_LINE)
@@ -67,38 +84,63 @@ AMI.prototype._createMessage = function(obj) {
   return msg.join(NEW_LINE)
 }
 
+AMI.prototype._authenticate = function() {
+  this._connected = true
+
+  this.action('Login', {
+    Username: this._config.username,
+    Secret: this._config.password,
+    Events: this._config.events ? 'on' : 'off'
+  }).then(() => {
+    this.emit('authenticated')
+  }).catch((err) => {
+    this.emit('error', new Error(err.toString()))
+  })
+}
+
 AMI.prototype._parseMessage = function(message) {
-  let result = {}
-    , endLineIndex, msgLines, msgLine, msgLineSplit
+  let result, endLineIndex, msgLines
+    , msgLine, msgLineSplit
 
   this._msgBuffer += message
 
   while ((endLineIndex = this._msgBuffer.indexOf(END_LINE)) != -1) {
     msgLines = this._msgBuffer.substr(0, endLineIndex+2).split(NEW_LINE)
     this._msgBuffer = this._msgBuffer.substr(endLineIndex+4)
+    result = {}
 
     for (let i=0;i<msgLines.length;i++) {
       msgLine = msgLines[i]
-      if (msgLine.indexOf(': ') != -1) {
-        msgLineSplit = msgLine.split(': ')
+
+      if (msgLine.indexOf(COLON_SEP) != -1) {
+        msgLineSplit = msgLine.split(COLON_SEP)
         result[msgLineSplit[0]] = msgLineSplit[1]
       }
     }
-  }
 
-  return isEmptyObj(result) ? null : result
+    if (result.Event || result.Response) {
+      this._asteriskResponse(result)
+    }
+  }
 }
 
 AMI.prototype._onConnect = function() {
   this.emit('connected')
 }
 
-AMI.prototype._onClose = function() {
-  console.log('Closed')
+AMI.prototype._onClose = function(err) {
+  this._connected = false
+  this.emit('disconnected', err)
+  this._connection.destroy()
+
+  if (this._config.keepAlive) {
+
+  }
 }
 
 AMI.prototype._onEnd = function() {
-  console.log('Ended')
+  this._connection.end()
+  this._onClose()
 }
 
 AMI.prototype._onError = function(err) {
@@ -108,61 +150,39 @@ AMI.prototype._onError = function(err) {
 AMI.prototype._onData = function(buffer) {
   let data = buffer.toString()
 
-  if (data.match(/^Asterisk Call Manager/) && !this._loggedIn) {
-    this._connected = true
-    this.action('Login', {
-      Username: this._config.username,
-      Secret: this._config.password,
-      Events: this._config.events ? 'on' : 'off'
-    }).then(() => {
-      this.emit('authenticated')
-    }).catch((err) => {
-      this.emit('error', new Error(err.toString()))
-    })
-  } else if (data && this._connected) {
-    let message = this._parseMessage(data)
+  if (data.startsWith('Asterisk Call Manager')) {
+    data.split(NEW_LINE)
+        .splice(1)
+        .join(NEW_LINE)
+  }
 
-    if (!message)
-      return
+  this._parseMessage(data)
+}
 
-    if (message.Response && this._requestMap[message.ActionID]) {
+AMI.prototype._asteriskResponse = function(message) {
+  this._requestWorker()
 
-      if (this._config.wrapEventList && message.EventList
-          && !this._requestMap[message.ActionID].eventList) {
-        this._requestMap[message.ActionID].eventList = true
-        this._requestMap[message.ActionID].message = message
-        this._requestMap[message.ActionID].events = []
-      } else {
-        this._resolveAction(message)
-      }
+  if (this._config.debug) {
+    this.emit('debug', message)
+  }
 
-    } else if (message.Event) {
-      if (this._config.debug) {
-        this.emit('debug', message)
-      }
-
-      if (this._requestMap[message.ActionID]) {
-        this._requestMap[message.ActionID].events.push(message)
-
-        if (message.EventList && (message.EventList == 'Complete' || message.EventList == 'Cancelled')) {
-          let responseMsg = this._requestMap[message.ActionID].message
-          responseMsg.Events = this._requestMap[message.ActionID].events
-
-          this._resolveAction(responseMsg)
-        }
-      } else {
-        this.emit(message.Event, message)
-      }
-    }
-
+  if (message.Response) {
+    this._resolveAction(message)
   } else {
-    ami.emit('error', new Error('Unknown AMI data'))
+    let evt = message.Event
+    delete message.Event
+    this.emit(evt, message)
   }
 }
 
 AMI.prototype._resolveAction = function(msg) {
-  let resolve = this._requestMap[msg.ActionID].resolve
-    , reject = this._requestMap[msg.ActionID].reject
+  let requestMap = this._requestMap[msg.ActionID]
+
+  if (!requestMap)
+    return
+
+  let resolve = requestMap.resolve
+    , reject = requestMap.reject
 
   delete this._requestMap[msg.ActionID]
 

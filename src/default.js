@@ -3,7 +3,7 @@ module.exports = {
   host: 'localhost',
   username: 'admin',
   password: '',
-  event: false,
+  events: false,
   debug: false,
-  wrapEventList: true
+  keepAlive: true
 }
