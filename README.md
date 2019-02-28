@@ -11,9 +11,9 @@ let ami = new AMI({
   host: 'localhost', // required
   username: 'admin', // required
   password: 'secret', // required
-  event: true, // Event mask filter into on or off
+  events: true, // Event mask filter into on or off
   debug: true, // Show all ami event into debug
-  wrapEventList: true // Wrap Response EventList like SIPpeers
+  keepAlive: true
 })
 
 ami.on('error', err => {
