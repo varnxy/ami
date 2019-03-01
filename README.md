@@ -7,17 +7,29 @@ Interacting with Asterisk Manager Interface with Node.
 const AMI = require('@varnxy/ami')
 
 let ami = new AMI({
-  port: 5038, // required
-  host: 'localhost', // required
-  username: 'admin', // required
-  secret: 'secret', // required
-  events: true, // Event mask filter into on or off
-  debug: true, // Show all ami event into debug
-  keepConnected: true
+  port: process.env.AMI_PORT, // required
+  host: process.env.AMI_HOST, // required
+  username: process.env.AMI_USERNAME, // required
+  secret: process.env.AMI_SECRET, // required
+  events: process.env.AMI_EVENTS === 'true', // Event mask filter into on or off
+  debug: process.env.AMI_DEBUG === 'true', // Show all ami event into debug
+  keepConnected: process.env.AMI_KEEPCONNECTED === 'true'
 })
 
 ami.on('error', err => {
   console.log(err)
+})
+
+ami.once('connected', () => {
+  console.log('Connected')
+})
+
+ami.on('reconnected', () => {
+  console.log('Reconnected')
+})
+
+ami.on('disconnected', err => {
+  console.log('Disconnected')
 })
 
 // Show all AMI Response and Event
@@ -30,13 +42,15 @@ ami.on('Cdr', msg => {
   console.log(msg)
 })
 
+ami.on('PeerlistComplete', msg => {
+  console.log(msg)
+})
+
 ami.on('authenticated', () => {
   // AMI Action SIPpeers
   ami.action('SIPpeers').then(msg => {
     console.log(msg)
-  }).catch(err => {
-    console.error(err)
-  })
+  }).catch(console.error)
 
   // AMI Action DBGet
   ami.action('DBGet', {
@@ -44,9 +58,7 @@ ami.on('authenticated', () => {
     Key: 'cidnum'
   }).then(msg => {
     console.log(msg)
-  }).catch(err => {
-    console.error(err)
-  })
+  }).catch(console.error)
 })
 
 ami.start()
