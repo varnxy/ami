@@ -89,7 +89,7 @@ AMI.prototype._authenticate = function() {
 
   this.action('Login', {
     Username: this._config.username,
-    Secret: this._config.password,
+    Secret: this._config.secret,
     Events: this._config.events ? 'on' : 'off'
   }).then(() => {
     this.emit('authenticated')

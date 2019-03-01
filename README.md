@@ -10,7 +10,7 @@ let ami = new AMI({
   port: 5038, // required
   host: 'localhost', // required
   username: 'admin', // required
-  password: 'secret', // required
+  secret: 'secret', // required
   events: true, // Event mask filter into on or off
   debug: true, // Show all ami event into debug
   keepConnected: true

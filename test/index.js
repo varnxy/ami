@@ -9,7 +9,7 @@ let ami = new AMI({
   port: process.env.AMI_PORT, // required
   host: process.env.AMI_HOST, // required
   username: process.env.AMI_USERNAME, // required
-  password: process.env.AMI_PASSWORD, // required
+  secret: process.env.AMI_SECRET, // required
   events: process.env.AMI_EVENTS === 'true', // Event mask filter into on or off
   debug: process.env.AMI_DEBUG === 'true', // Show all ami event into debug
   keepConnected: process.env.AMI_KEEPCONNECTED === 'true'
