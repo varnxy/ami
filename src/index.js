@@ -102,10 +102,10 @@ AMI.prototype._onClose = function(err) {
   this._connection.destroy()
 
   if (this._config.keepConnected) {
-    this._reconnectTime = Math.min(this._reconnectTime+1, MAX_RECONNECT_TIME)
+    this._reconnectTime = Math.min(this._reconnectTime+1, C.MAX_RECONNECT_TIME)
     setTimeout(() => {
       this._tryReconnect()
-    }, RECONNECT_BACKOFF * (++this._reconnectTime))
+    }, C.RECONNECT_BACKOFF * (++this._reconnectTime))
   }
 }
 
