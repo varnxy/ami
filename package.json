@@ -7,9 +7,7 @@
   "author": "Yusril Herlian Syah <yusrilhsyah@gmail.com>",
   "license": "MIT",
   "private": false,
-  "devDependencies": {
-    "dotenv": "^6.2.0"
-  },
+  "devDependencies": {},
   "keywords": [
     "asterisk",
     "pbx",
