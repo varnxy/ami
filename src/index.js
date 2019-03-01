@@ -45,7 +45,7 @@ AMI.prototype.start = function() {
 AMI.prototype.action = function(name, params) {
   params = params || {}
   params.Action = name
-  params.ActionID = this._requestId++
+  params.ActionID = params.ActionID || this._requestId++
 
   let message = this._createMessage(params)
     , promise = new Promise((resolve, reject) => {
