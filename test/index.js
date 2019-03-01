@@ -16,15 +16,19 @@ let ami = new AMI({
 })
 
 ami.on('error', err => {
-  console.log(err)
+  // console.log(err)
 })
 
-ami.on('connected', () => {
+ami.once('connected', () => {
   console.log('Connected')
 })
 
+ami.on('reconnected', () => {
+  console.log('Reconnected')
+})
+
 ami.on('disconnected', err => {
-  console.log('Disconnected: ', err)
+  console.log('Disconnected')
 })
 
 // Show all AMI Response and Event
@@ -42,7 +46,6 @@ ami.on('PeerlistComplete', msg => {
 })
 
 ami.on('authenticated', () => {
-  console.log('authenticated')
   // AMI Action SIPpeers
   ami.action('SIPpeers').then(msg => {
     // console.log(msg)
