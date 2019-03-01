@@ -9,5 +9,15 @@
   "private": false,
   "devDependencies": {
     "dotenv": "^6.2.0"
-  }
+  },
+  "keywords": [
+    "asterisk",
+    "pbx",
+    "freepbx",
+    "issabel",
+    "elastix",
+    "ami",
+    "manager",
+    "interface"
+  ]
 }
