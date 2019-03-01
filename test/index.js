@@ -12,7 +12,7 @@ let ami = new AMI({
   password: process.env.AMI_PASSWORD, // required
   events: process.env.AMI_EVENTS === 'true', // Event mask filter into on or off
   debug: process.env.AMI_DEBUG === 'true', // Show all ami event into debug
-  keepAlive: process.env.AMI_KEEPALIVE === 'true'
+  keepConnected: process.env.AMI_KEEPCONNECTED === 'true'
 })
 
 ami.on('error', err => {

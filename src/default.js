@@ -5,5 +5,5 @@ module.exports = {
   password: '',
   events: false,
   debug: false,
-  keepAlive: true
+  keepConnected: true
 }

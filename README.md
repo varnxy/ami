@@ -13,7 +13,7 @@ let ami = new AMI({
   password: 'secret', // required
   events: true, // Event mask filter into on or off
   debug: true, // Show all ami event into debug
-  keepAlive: true
+  keepConnected: true
 })
 
 ami.on('error', err => {
