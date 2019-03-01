@@ -1,6 +1,6 @@
 {
   "name": "@varnxy/ami",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Interacting with Asterisk Manager Interface with Node",
   "main": "src/index.js",
   "repository": "https://github.com/varnxy/ami.git",
