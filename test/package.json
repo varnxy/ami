@@ -1,0 +1,10 @@
+{
+  "name": "@varnxy/ami-test",
+  "version": "1.0.0",
+  "description": "Test @varnxy/ami in real asterisk",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "dotenv": "^6.2.0"
+  }
+}
