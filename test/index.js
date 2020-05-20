@@ -45,7 +45,8 @@ ami.on('PeerlistComplete', msg => {
   // console.log(msg)
 })
 
-ami.on('authenticated', () => {
+
+ami.start().then(() => {
   // AMI Action SIPpeers
   ami.action('SIPpeers').then(msg => {
     // console.log(msg)
@@ -56,8 +57,6 @@ ami.on('authenticated', () => {
     Family: 'AMPUSER/106',
     Key: 'cidnum'
   }).then(msg => {
-    // console.log(msg)
+    console.log(msg)
   }).catch(console.error)
-})
-
-ami.start()
+}).catch(console.log)

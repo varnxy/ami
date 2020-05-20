@@ -25,8 +25,14 @@ function AMI(opt) {
 AMI.prototype.start = function() {
   this._connection = new Socket()
   this._connection.connect(this._config.port, this._config.host)
-  this._connection.once('connect', this._authenticate.bind(this))
-  this._initialSocket()
+
+  return new Promise((resolve, reject) => {
+    this._connection.once('connect', () => {
+      this._authenticate().then(resolve)
+        .catch(reject)
+    })
+    this._initialSocket()
+  })
 }
 
 AMI.prototype._initialSocket = function() {
@@ -79,15 +85,15 @@ AMI.prototype._requestWorker = function() {
 }
 
 AMI.prototype._authenticate = function() {
-  this.action(C.ACTION_LOGIN, {
-    Username: this._config.username,
-    Secret: this._config.secret,
-    Events: this._config.events ? C.RESPONSE_EVENT_ON : C.RESPONSE_EVENT_OFF
-  }).then(() => {
-    this.emit(!this._connected ? C.SIGNAL.AUTHENTICATED : C.SIGNAL.RECONNECTED)
-    this._connected = true
-  }).catch((err) => {
-    this.emit(C.SIGNAL.ERROR, new Error(err.toString()))
+  return new Promise((resolve, reject) => {
+    this.action(C.ACTION_LOGIN, {
+      Username: this._config.username,
+      Secret: this._config.secret,
+      Events: this._config.events ? C.RESPONSE_EVENT_ON : C.RESPONSE_EVENT_OFF
+    }).then(() => {
+      this._connected = true
+      resolve()
+    })
   })
 }
 

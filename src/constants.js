@@ -11,7 +11,6 @@ module.exports = {
   RESPONSE_EVENT_ON: 'on',
   RESPONSE_EVENT_OFF: 'off',
   SIGNAL: {
-    AUTHENTICATED: 'authenticated',
     CONNECTED: 'connected',
     DISCONNECTED: 'disconnected',
     DEBUG: 'debug',
