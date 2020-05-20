@@ -46,10 +46,10 @@ ami.on('PeerlistComplete', msg => {
   console.log(msg)
 })
 
-ami.on('authenticated', () => {
+ami.start().then(() => {
   // AMI Action SIPpeers
   ami.action('SIPpeers').then(msg => {
-    console.log(msg)
+    // console.log(msg)
   }).catch(console.error)
 
   // AMI Action DBGet
@@ -59,7 +59,4 @@ ami.on('authenticated', () => {
   }).then(msg => {
     console.log(msg)
   }).catch(console.error)
-})
-
-ami.start()
-```
+}).catch(console.log)
